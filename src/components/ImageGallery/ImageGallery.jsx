@@ -1,5 +1,4 @@
-import React, { Component } from 'react';
-
+import { useState, useEffect } from 'react';
 import css from './ImageGallery.module.css';
 import { toast } from 'react-toastify';
 
@@ -9,95 +8,71 @@ import { Loader } from 'components/Loader';
 import { fetchSearch } from '../../Service/search-api';
 import PropTypes from 'prop-types';
 
-export class ImageGallery extends Component {
-  state = {
-    gallery: [],
-    status: 'idle',
-    error: null,
-    perPage: 12,
-    total: 0,
-    page: 1,
+export function ImageGallery({ searchName }) {
+  const [gallery, setGallery] = useState([]);
+  const [status, setStatus] = useState('idle');
+  const [error, setError] = useState(null);
+  const [perPage, setPerPage] = useState(12);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    if (searchName === '') {
+      return;
+    }
+
+    setStatus('pending');
+    const nextName = searchName;
+
+    fetchSearch(nextName, searchName, perPage, page)
+      .then(gallery => {
+        if (gallery.total === 0) {
+          return (
+            setStatus('idle'), toast.error('Nothing found for your request!')
+          );
+        }
+        setGallery(prevState => [...prevState, ...gallery.hits]);
+        setStatus('resolved');
+        setTotal(gallery.total);
+      })
+      .catch(({ message: error }) => {
+        setError(error);
+        setStatus('rejected');
+      });
+  }, [page, perPage, searchName]);
+
+  const handleButtonPagination = e => {
+    setPage(page + 1);
   };
-  componentDidUpdate(prevProps, prevState) {
-    const prevName = prevProps.searchName;
-    const nextName = this.props.searchName;
-
-    const prevPage = prevState.page;
-    const nextPage = this.state.page;
-
-    console.log(`prevName: ${prevPage}`);
-    console.log(`nextName: ${nextPage}`);
-
-    if (prevName !== nextName) {
-      this.setState({ gallery: [], page: 1 });
-    }
-
-    if (prevName !== nextName || prevPage !== nextPage) {
-      this.setState({ status: 'pending' });
-
-      setTimeout(() => {
-        fetchSearch(
-          nextName,
-          this.props.searchName,
-          this.state.perPage,
-          this.state.page
-        )
-          .then(gallery => {
-            if (gallery.total === 0) {
-              return (
-                this.setState({ status: 'idle' }),
-                toast.error('Nothing found for your request!')
-              );
-            }
-
-            this.setState(prevState => ({
-              gallery: [...prevState.gallery, ...gallery.hits],
-              status: 'resolved',
-              total: gallery.total,
-            }));
-          })
-          .catch(error => this.setState({ error, status: 'rejected' }));
-      }, 0);
-    }
-  }
-
-  handleButtonPagination = e => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
   };
 
-  render() {
-    const { gallery, status, perPage, total, page } = this.state;
-
-    if (status === 'idle') {
-      return <div>Please enter valid search name</div>;
-    }
-
-    if (status === 'rejected') {
-      return toast.error('Error Message !');
-    }
-
-    const isBtnLoadMoreVisual = Math.floor(total - page * perPage) > 0;
-    return (
-      <>
-        <ul className={css.ImageGallery}>
-          {gallery.map(({ id, webformatURL, largeImageURL }) => (
-            <ImageGalleryItem
-              key={id}
-              webformatURL={webformatURL}
-              largeImageURL={largeImageURL}
-            />
-          ))}
-        </ul>
-
-        {status === 'pending' && <Loader />}
-        {status === 'resolved' && isBtnLoadMoreVisual && (
-          <Button onBtnLoadmore={this.handleButtonPagination} />
-        )}
-      </>
-    );
+  if (status === 'idle') {
+    return <div>Please enter valid search name</div>;
   }
+
+  if (status === 'rejected') {
+    return toast.error(`Error Message ${error} !`);
+  }
+
+  const isBtnLoadMoreVisual = Math.floor(total - page * perPage) > 0;
+  return (
+    <>
+      <ul className={css.ImageGallery}>
+        {gallery.map(({ id, webformatURL, largeImageURL }) => (
+          <ImageGalleryItem
+            key={id}
+            webformatURL={webformatURL}
+            largeImageURL={largeImageURL}
+          />
+        ))}
+      </ul>
+
+      {status === 'pending' && <Loader />}
+      {status === 'resolved' && isBtnLoadMoreVisual && (
+        <Button onBtnLoadmore={handleButtonPagination} />
+      )}
+    </>
+  );
 }
 
 ImageGallery.propTypes = {
