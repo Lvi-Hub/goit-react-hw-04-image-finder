@@ -47,6 +47,7 @@ export function ImageGallery({ searchName }) {
         setError(error);
         setStatus('rejected');
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gallery, page, searchName]);
 
   const handleButtonPagination = e => {
