@@ -17,8 +17,15 @@ export function ImageGallery({ searchName }) {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
+    setGallery([]);
+  }, [searchName]);
+
+  useEffect(() => {
     if (searchName === '') {
       return;
+    }
+    if (gallery === []) {
+      setPage(1);
     }
 
     setStatus('pending');
@@ -34,16 +41,16 @@ export function ImageGallery({ searchName }) {
         setGallery(prevState => [...prevState, ...gallery.hits]);
         setStatus('resolved');
         setTotal(gallery.total);
+        setPerPage(12);
       })
       .catch(({ message: error }) => {
         setError(error);
         setStatus('rejected');
       });
-  }, [page, perPage, searchName]);
+  }, [gallery, page, searchName]);
 
   const handleButtonPagination = e => {
     setPage(page + 1);
-  };
   };
 
   if (status === 'idle') {
