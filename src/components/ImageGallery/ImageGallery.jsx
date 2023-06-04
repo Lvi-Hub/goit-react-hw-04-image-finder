@@ -12,9 +12,9 @@ export function ImageGallery({ searchName }) {
   const [gallery, setGallery] = useState([]);
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState(null);
-  const [perPage, setPerPage] = useState(12);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const perPage = 12;
 
   useEffect(() => {
     setGallery([]);
@@ -41,14 +41,13 @@ export function ImageGallery({ searchName }) {
         setGallery(prevState => [...prevState, ...gallery.hits]);
         setStatus('resolved');
         setTotal(gallery.total);
-        setPerPage(12);
       })
       .catch(({ message: error }) => {
         setError(error);
         setStatus('rejected');
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gallery, page, searchName]);
+  }, [page, searchName]);
 
   const handleButtonPagination = e => {
     setPage(page + 1);
