@@ -8,20 +8,24 @@ import { Loader } from 'components/Loader';
 import { fetchSearch } from '../../Service/search-api';
 import PropTypes from 'prop-types';
 
-export function ImageGallery({ searchName, page, loadMore }) {
+export function ImageGallery({ searchName }) {
   const [gallery, setGallery] = useState([]);
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState(null);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const perPage = 12;
+  const [newsearch, setNewsearch] = useState('');
+
+  useEffect(() => {
+    setGallery([]);
+    setPage(1);
+    setNewsearch(searchName);
+  }, [searchName]);
 
   useEffect(() => {
     if (searchName === '') {
       return;
-    }
-    if (page === 1) {
-      setGallery([]);
-      console.log('Page = 1');
     }
 
     setStatus('pending');
@@ -43,7 +47,7 @@ export function ImageGallery({ searchName, page, loadMore }) {
         setStatus('rejected');
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, searchName]);
+  }, [page, newsearch]);
 
   if (status === 'idle') {
     return <div>Please enter valid search name</div>;
@@ -52,6 +56,10 @@ export function ImageGallery({ searchName, page, loadMore }) {
   if (status === 'rejected') {
     return toast.error(`Error Message ${error} !`);
   }
+
+  const handleButtonPagination = e => {
+    setPage(page + 1);
+  };
 
   const isBtnLoadMoreVisual = Math.floor(total - page * perPage) > 0;
   return (
@@ -68,7 +76,7 @@ export function ImageGallery({ searchName, page, loadMore }) {
 
       {status === 'pending' && <Loader />}
       {status === 'resolved' && isBtnLoadMoreVisual && (
-        <Button onBtnLoadmore={loadMore} />
+        <Button onBtnLoadmore={handleButtonPagination} />
       )}
     </>
   );
@@ -76,6 +84,4 @@ export function ImageGallery({ searchName, page, loadMore }) {
 
 ImageGallery.propTypes = {
   searchName: PropTypes.string.isRequired,
-  page: PropTypes.number.isRequired,
-  loadMore: PropTypes.func.isRequired,
 };
