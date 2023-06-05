@@ -8,24 +8,20 @@ import { Loader } from 'components/Loader';
 import { fetchSearch } from '../../Service/search-api';
 import PropTypes from 'prop-types';
 
-export function ImageGallery({ searchName }) {
+export function ImageGallery({ searchName, page, loadMore }) {
   const [gallery, setGallery] = useState([]);
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState(null);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
   const perPage = 12;
-
-  useEffect(() => {
-    setGallery([]);
-  }, [searchName]);
 
   useEffect(() => {
     if (searchName === '') {
       return;
     }
-    if (gallery === []) {
-      setPage(1);
+    if (page === 1) {
+      setGallery([]);
+      console.log('Page = 1');
     }
 
     setStatus('pending');
@@ -48,10 +44,6 @@ export function ImageGallery({ searchName }) {
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, searchName]);
-
-  const handleButtonPagination = e => {
-    setPage(page + 1);
-  };
 
   if (status === 'idle') {
     return <div>Please enter valid search name</div>;
@@ -76,7 +68,7 @@ export function ImageGallery({ searchName }) {
 
       {status === 'pending' && <Loader />}
       {status === 'resolved' && isBtnLoadMoreVisual && (
-        <Button onBtnLoadmore={handleButtonPagination} />
+        <Button onBtnLoadmore={loadMore} />
       )}
     </>
   );
@@ -84,4 +76,6 @@ export function ImageGallery({ searchName }) {
 
 ImageGallery.propTypes = {
   searchName: PropTypes.string.isRequired,
+  page: PropTypes.number.isRequired,
+  loadMore: PropTypes.func.isRequired,
 };
